@@ -346,7 +346,7 @@
         // 显示图片
         base64ImageContainer.innerHTML = `
           <img src="${imageUrl}" alt="Converted Image" class="preview-image">
-          <button class="copy-btn" onclick="copyToClipboard('${imageUrl.replace(/'/g, "\\'")}')">⎘</button>
+          <button class="copy-btn" onclick="copyToClipboard('${escapeHtml(imageUrl)}')">⎘</button>
         `;
       } catch (error) {
         console.error('Error:', error);
@@ -410,13 +410,9 @@
       
       reader.onload = (event) => {
         currentBase64 = event.target.result;
-        const shortBase64 = currentBase64.length > 500 
-          ? `${currentBase64.substring(0, 500)}... (truncated)` 
-          : currentBase64;
-          
         base64Output.innerHTML = `
           <img src="${currentBase64}" class="preview-image">
-          <div>${shortBase64}</div>
+          <div>${currentBase64}</div>
         `;
         copyBase64Btn.disabled = false;
       };
@@ -429,16 +425,40 @@
       reader.readAsDataURL(file);
     }
     
-    // 复制功能
-    function copyToClipboard(text) {
-      navigator.clipboard.writeText(text)
-        .then(() => showAlert('Copied to clipboard!', 2000))
-        .catch(err => {
-          console.error('Failed to copy:', err);
-          showAlert('Failed to copy. Please try again.');
-        });
+    // HTML特殊字符转义
+    function escapeHtml(unsafe) {
+      return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
     
+    // 复制功能
+    function copyToClipboard(text) {
+      // 创建临时textarea元素
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';  // 防止页面滚动
+      document.body.appendChild(textarea);
+      textarea.select();
+      
+      try {
+        const successful = document.execCommand('copy');
+        if (!successful) {
+          throw new Error('Copy command failed');
+        }
+        showAlert('Copied to clipboard!', 2000);
+      } catch (err) {
+        console.error('Failed to copy:', err);
+        showAlert('Failed to copy. Please try again or use Ctrl+C');
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    }
+    
+    // 复制Base64按钮点击事件
     copyBase64Btn.addEventListener('click', () => {
       if (currentBase64) {
         copyToClipboard(currentBase64);
