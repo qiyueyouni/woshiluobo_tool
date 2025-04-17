@@ -85,6 +85,42 @@
             color: #888;
             font-size: 14px;
         }
+        .controls {
+            margin: 20px 0;
+            text-align: center;
+            width: 100%;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .slider-container {
+            margin: 15px 0;
+        }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        .format-options {
+            margin-top: 15px;
+        }
+        .format-btn {
+            padding: 8px 15px;
+            margin: 0 5px;
+            background-color: #f1f3f4;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .format-btn.active {
+            background-color: #1a73e8;
+            color: white;
+            border-color: #1a73e8;
+        }
     </style>
 </head>
 <body>
@@ -94,6 +130,31 @@
         <div id="dropArea" class="drop-area">
             <p>拖放图片到此处或点击选择文件</p>
             <p class="file-info">支持JPG、PNG等常见图片格式</p>
+        </div>
+        
+        <div class="controls">
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>压缩质量: <span id="qualityValue">60</span>%</span>
+                    <span>压缩后: <span id="compressedSize">0 KB</span></span>
+                </div>
+                <input type="range" id="qualitySlider" min="10" max="90" value="60">
+            </div>
+            
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>最大宽度: <span id="widthValue">1200</span>px</span>
+                    <span>原始尺寸: <span id="originalDimensions">0×0</span></span>
+                </div>
+                <input type="range" id="widthSlider" min="320" max="3840" value="1200">
+            </div>
+            
+            <div class="format-options">
+                <span>输出格式:</span>
+                <button id="jpegBtn" class="format-btn active">JPEG</button>
+                <button id="pngBtn" class="format-btn">PNG</button>
+                <button id="webpBtn" class="format-btn">WebP</button>
+            </div>
         </div>
         
         <div id="arrow" class="arrow">↓</div>
@@ -115,6 +176,15 @@
         const resultImage = document.getElementById('resultImage');
         const downloadBtn = document.getElementById('downloadBtn');
         const infoText = document.getElementById('infoText');
+        const qualitySlider = document.getElementById('qualitySlider');
+        const widthSlider = document.getElementById('widthSlider');
+        const qualityValue = document.getElementById('qualityValue');
+        const widthValue = document.getElementById('widthValue');
+        const compressedSize = document.getElementById('compressedSize');
+        const originalDimensions = document.getElementById('originalDimensions');
+        const jpegBtn = document.getElementById('jpegBtn');
+        const pngBtn = document.getElementById('pngBtn');
+        const webpBtn = document.getElementById('webpBtn');
         
         // 创建隐藏的文件输入元素
         const fileInput = document.createElement('input');
@@ -123,10 +193,15 @@
         fileInput.style.display = 'none';
         document.body.appendChild(fileInput);
         
-        // 存储压缩后的图片和原始文件名
+        // 存储压缩后的图片和原始文件信息
         let compressedImage = null;
         let originalFileName = '';
         let originalFileSize = 0;
+        let originalWidth = 0;
+        let originalHeight = 0;
+        let currentQuality = 0.6;
+        let maxWidth = 1200;
+        let outputFormat = 'jpeg';
         
         // 阻止默认拖放行为
         function preventDefaults(e) {
@@ -176,6 +251,54 @@
             }
         });
         
+        // 滑块事件监听
+        qualitySlider.addEventListener('input', function() {
+            currentQuality = this.value / 100;
+            qualityValue.textContent = this.value;
+            if (compressedImage) {
+                handleImage(fileInput.files[0]);
+            }
+        });
+        
+        widthSlider.addEventListener('input', function() {
+            maxWidth = parseInt(this.value);
+            widthValue.textContent = this.value;
+            if (compressedImage) {
+                handleImage(fileInput.files[0]);
+            }
+        });
+        
+        // 格式按钮事件
+        jpegBtn.addEventListener('click', function() {
+            outputFormat = 'jpeg';
+            jpegBtn.classList.add('active');
+            pngBtn.classList.remove('active');
+            webpBtn.classList.remove('active');
+            if (compressedImage) {
+                handleImage(fileInput.files[0]);
+            }
+        });
+        
+        pngBtn.addEventListener('click', function() {
+            outputFormat = 'png';
+            pngBtn.classList.add('active');
+            jpegBtn.classList.remove('active');
+            webpBtn.classList.remove('active');
+            if (compressedImage) {
+                handleImage(fileInput.files[0]);
+            }
+        });
+        
+        webpBtn.addEventListener('click', function() {
+            outputFormat = 'webp';
+            webpBtn.classList.add('active');
+            jpegBtn.classList.remove('active');
+            pngBtn.classList.remove('active');
+            if (compressedImage) {
+                handleImage(fileInput.files[0]);
+            }
+        });
+        
         // 处理图片压缩
         function handleImage(file) {
             originalFileName = file.name;
@@ -183,70 +306,85 @@
             
             const reader = new FileReader();
             reader.onload = function(e) {
-                // 使用Canvas API进行图片压缩
                 compressImage(e.target.result, file.type);
             };
             reader.readAsDataURL(file);
         }
         
         // 使用Canvas压缩图片
-        function compressImage(imageData, fileType) {
+        function compressImage(imageData, originalType) {
             const img = new Image();
             img.onload = function() {
+                originalWidth = img.width;
+                originalHeight = img.height;
+                originalDimensions.textContent = `${originalWidth}×${originalHeight}`;
+                
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 
-                // 设置最大尺寸
-                const MAX_WIDTH = 1920;
-                const MAX_HEIGHT = 1920;
-                let width = img.width;
-                let height = img.height;
+                // 计算新尺寸
+                let width = originalWidth;
+                let height = originalHeight;
                 
-                // 调整尺寸
-                if (width > height) {
-                    if (width > MAX_WIDTH) {
-                        height *= MAX_WIDTH / width;
-                        width = MAX_WIDTH;
-                    }
-                } else {
-                    if (height > MAX_HEIGHT) {
-                        width *= MAX_HEIGHT / height;
-                        height = MAX_HEIGHT;
-                    }
+                // 如果图片宽度超过最大宽度，按比例缩小
+                if (width > maxWidth) {
+                    const ratio = maxWidth / width;
+                    width = maxWidth;
+                    height = Math.round(height * ratio);
+                }
+                
+                // 对超大图片进一步限制高度
+                if (height > 2000) {
+                    const ratio = 2000 / height;
+                    width = Math.round(width * ratio);
+                    height = 2000;
                 }
                 
                 canvas.width = width;
                 canvas.height = height;
                 
-                // 绘制图片到Canvas
+                // 使用高质量缩放
+                ctx.imageSmoothingQuality = 'high';
                 ctx.drawImage(img, 0, 0, width, height);
                 
-                // 设置压缩质量 (0.7 = 70%质量)
-                let quality = 0.7;
-                let compressedDataUrl;
-                
-                // 根据文件类型使用不同的压缩方法
-                if (fileType === 'image/jpeg' || fileType === 'image/jpg') {
-                    compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-                } else {
-                    // PNG和其他格式使用PNG压缩
-                    compressedDataUrl = canvas.toDataURL('image/png');
+                // 根据选择的格式进行压缩
+                let mimeType;
+                switch(outputFormat) {
+                    case 'png':
+                        mimeType = 'image/png';
+                        break;
+                    case 'webp':
+                        mimeType = 'image/webp';
+                        break;
+                    case 'jpeg':
+                    default:
+                        mimeType = 'image/jpeg';
                 }
                 
-                // 计算压缩率
-                const compressedSize = Math.round((compressedDataUrl.length - 'data:image/png;base64,'.length) * 0.75);
-                const reductionPercent = Math.round((1 - compressedSize / originalFileSize) * 100);
+                // 获取压缩后的数据URL
+                let compressedDataUrl;
+                if (mimeType === 'image/jpeg') {
+                    compressedDataUrl = canvas.toDataURL(mimeType, currentQuality);
+                } else {
+                    compressedDataUrl = canvas.toDataURL(mimeType);
+                }
+                
+                // 计算压缩后大小
+                const compressedSizeBytes = Math.round((compressedDataUrl.length - 'data:image/jpeg;base64,'.length) * 0.75);
+                const reductionPercent = Math.round((1 - compressedSizeBytes / originalFileSize) * 100);
                 
                 // 显示结果
                 resultImage.src = compressedDataUrl;
                 arrow.style.display = 'block';
                 resultContainer.style.display = 'block';
+                compressedSize.textContent = formatFileSize(compressedSizeBytes);
                 
                 // 显示压缩信息
                 infoText.innerHTML = `
                     原始大小: ${formatFileSize(originalFileSize)}<br>
-                    压缩后大小: ${formatFileSize(compressedSize)}<br>
-                    大小减少了: ${reductionPercent}%
+                    压缩后大小: ${formatFileSize(compressedSizeBytes)}<br>
+                    大小减少了: ${reductionPercent}%<br>
+                    尺寸: ${width}×${height} (原始: ${originalWidth}×${originalHeight})
                 `;
                 
                 // 存储压缩后的图片数据
@@ -271,14 +409,18 @@
                 const link = document.createElement('a');
                 link.href = compressedImage;
                 
-                // 根据原始文件名生成新文件名
-                let newFileName = 'compressed_' + originalFileName;
-                if (!originalFileName.includes('.')) {
-                    if (compressedImage.startsWith('data:image/jpeg')) {
-                        newFileName += '.jpg';
-                    } else {
+                // 生成新文件名
+                let newFileName = 'compressed_' + originalFileName.replace(/\.[^/.]+$/, '');
+                switch(outputFormat) {
+                    case 'png':
                         newFileName += '.png';
-                    }
+                        break;
+                    case 'webp':
+                        newFileName += '.webp';
+                        break;
+                    case 'jpeg':
+                    default:
+                        newFileName += '.jpg';
                 }
                 
                 link.download = newFileName;
