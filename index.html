@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Base64 and Image Converter</title>
   <style>
+    /* 保持原有的CSS样式不变 */
     :root {
       --primary-color: #007bff;
       --secondary-color: #6c757d;
@@ -270,6 +271,7 @@
       <textarea id="base64Input" placeholder="Paste Base64 string here (data:image/... or just the base64 part)"></textarea>
       <div class="button-group">
         <button id="convertBtn" class="btn-primary">Convert to Image</button>
+        <button id="saveImageBtn" class="btn-success" disabled>Save to Photos</button>
         <button id="clearBase64Btn" class="btn-secondary">Clear</button>
       </div>
       <div class="image-preview" id="base64ImageContainer">
@@ -307,6 +309,7 @@
     // Base64 to Image functionality
     const base64Input = document.getElementById('base64Input');
     const convertBtn = document.getElementById('convertBtn');
+    const saveImageBtn = document.getElementById('saveImageBtn');
     const clearBase64Btn = document.getElementById('clearBase64Btn');
     const base64ImageContainer = document.getElementById('base64ImageContainer');
     
@@ -319,6 +322,7 @@
     const arrow = document.getElementById('arrow');
     
     let currentBase64 = '';
+    let currentImageUrl = '';
     
     // 监听窗口大小变化，调整箭头方向
     function updateArrowDirection() {
@@ -339,25 +343,62 @@
         }
 
         // 补全 Base64 前缀（如果未包含）
-        const imageUrl = inputValue.startsWith('data:image') 
+        currentImageUrl = inputValue.startsWith('data:image') 
           ? inputValue 
           : `data:image/png;base64,${inputValue}`;
 
         // 显示图片
         base64ImageContainer.innerHTML = `
-          <img src="${imageUrl}" alt="Converted Image" class="preview-image">
-          <button class="copy-btn" onclick="copyToClipboard('${escapeHtml(imageUrl)}')">⎘</button>
+          <img src="${currentImageUrl}" alt="Converted Image" class="preview-image">
+          <button class="copy-btn" onclick="copyToClipboard('${escapeHtml(currentImageUrl)}')">⎘</button>
         `;
+        saveImageBtn.disabled = false;
       } catch (error) {
         console.error('Error:', error);
         showAlert('Invalid Base64 input!');
       }
     });
     
+    // 保存图片到设备
+    saveImageBtn.addEventListener('click', () => {
+      if (!currentImageUrl) {
+        showAlert('No image to save!');
+        return;
+      }
+      
+      try {
+        // 创建下载链接
+        const link = document.createElement('a');
+        link.href = currentImageUrl;
+        
+        // 从Base64中提取图片类型
+        let extension = 'png';
+        const match = currentImageUrl.match(/^data:image\/(\w+);base64/);
+        if (match && match[1]) {
+          extension = match[1];
+        }
+        
+        // 设置下载文件名
+        link.download = `image_${Date.now()}.${extension}`;
+        
+        // 触发点击下载
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showAlert('Image saved! On mobile devices, please check your downloads folder.', 3000);
+      } catch (error) {
+        console.error('Error saving image:', error);
+        showAlert('Failed to save image. Please try again.');
+      }
+    });
+    
     // 清除Base64输入
     clearBase64Btn.addEventListener('click', () => {
       base64Input.value = '';
+      currentImageUrl = '';
       base64ImageContainer.innerHTML = '<span class="status-message">Image will appear here</span>';
+      saveImageBtn.disabled = true;
     });
     
     // 文件选择处理
