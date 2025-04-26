@@ -129,6 +129,12 @@ label {
     font-size: 0.8em;
     text-shadow: none;
 }
+.tool-link {
+  display: block;
+  margin-top: 10px;
+  color: #3498db;
+  text-decoration: none;
+}
 
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
@@ -193,7 +199,8 @@ label {
     <h2>Processing results:</h2>
     <textarea id="outputBox" class="output-box" readonly></textarea>
     <div class="footer">by 我是萝卜</div>
-
+     <a href="./imagesCompress.html" class="tool-link">Go to Image Compressor Tool</a>
+     <a href="./index.html" class="tool-link">Base64 and Image Converter</a>
     <script>
         // 主处理函数
         function process() {
