@@ -29,9 +29,9 @@ h1 {
 }
 
 h2 {
+    text-align: left;
     color: white;
     margin-top: 0;
-    text-align: center;
     text-shadow: none;
     font-size: 20px;
 }
@@ -143,14 +143,14 @@ label {
   margin-top: 10px;
   color: #3498db;
   text-decoration: none;
-  font-size: 12px; 
+  font-size: 14px; 
 }
 </style>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
       </head>
       <body>
         <h1>JavaScript Encoding and decoding tools</h1>
-        <label for="inputBox">输入内容：</label>
+        <label for="inputBox">Enter the content：</label>
         <textarea id="inputBox" class="input-box" placeholder="在此输入内容..."></textarea>
         <div class="control-group">
           <select id="operationType">
@@ -185,7 +185,7 @@ label {
             <button id="copyOutputBtn" onclick="copyOutput()">复制结果</button>
           </div>
         </div>
-        <h2>处理结果：</h2>
+        <h2>Processing results：</h2>
         <textarea id="outputBox" class="output-box" readonly></textarea>
         <a href="./index.html" class="tool-link">Base64 and Image Converter</a>
         <div class="footer">by 我是萝卜</div>
