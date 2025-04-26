@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
+  <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JavaScript Encoding and decoding tools</title>
-    <style>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>JavaScript Encoding and decoding tools</title>
+        <style>
 body {
     font-family: Arial, sans-serif;
     background-image: url('https://s2.loli.net/2025/04/18/e5zHfdMUIGx7OWY.jpg');
@@ -36,8 +36,23 @@ h2 {
     font-size: 20px;
 }
 
+.input-box {
+    width: 100%;
+    max-width: 800px;
+    margin: 10px auto;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-family: monospace;
+    background-color: rgba(128, 128, 128, 0.3);
+    height: 150px;
+    resize: none;
+    font-size: 16px;
+    display: block;
+    color: white;
+    overflow-y: auto;
+}
 
-.input-box, 
 .output-box {
     width: 100%;
     max-width: 800px;
@@ -48,18 +63,16 @@ h2 {
     font-family: monospace;
     background-color: rgba(128, 128, 128, 0.3);
     min-height: 100px;
-    resize: vertical;
+    resize: none;
     font-size: 16px;
     display: block;
-    color: white !important;
+    color: white;
 }
 
 .input-box::placeholder,
 .output-box::placeholder {
     color: rgba(255, 255, 255, 0.7);
-    text-shadow: none !important;
 }
-
 
 .control-group {
     display: flex;
@@ -88,20 +101,17 @@ button {
     border-radius: 4px;
     cursor: pointer;
     font-weight: bold;
-    text-shadow: none;
-    opacity: 0.7 !important; 
+    opacity: 0.7;
     transition: opacity 0.3s, transform 0.2s;
 }
 
+#processBtn { background-color: rgba(46, 204, 113, 0.8); }
+#clearBtn { background-color: rgba(231, 76, 60, 0.8); }
+#copyInputBtn { background-color: rgba(155, 89, 182, 0.8); }
+#copyOutputBtn { background-color: rgba(243, 156, 18, 0.8); }
 
-#processBtn { background-color: rgba(46, 204, 113, 0.8); } /* 绿色 */
-#clearBtn { background-color: rgba(231, 76, 60, 0.8); }   /* 红色 */
-#copyInputBtn { background-color: rgba(155, 89, 182, 0.8); } /* 紫色 */
-#copyOutputBtn { background-color: rgba(243, 156, 18, 0.8); } /* 橙色 */
-
-/* 按钮悬停效果 */
 button:hover {
-    opacity: 1 !important; /* 悬停时完全不透明 */
+    opacity: 1;
     transform: translateY(-1px);
 }
 
@@ -118,7 +128,6 @@ label {
     margin: 10px auto 5px;
     font-weight: bold;
     color: white;
-    text-shadow: none !important;
 }
 
 .footer {
@@ -127,8 +136,8 @@ label {
     color: rgba(255, 255, 255, 0.8);
     font-style: italic;
     font-size: 0.8em;
-    text-shadow: none;
 }
+
 .tool-link {
   display: block;
   margin-top: 10px;
@@ -136,73 +145,51 @@ label {
   text-decoration: none;
   font-size: 14px; 
 }
-
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
-</head>
-<body>
-    <h1>JavaScript Encoding and decoding tools</h1>
-    
-   <label for="inputBox">Enter the content:</label>
-    <textarea id="inputBox" class="input-box" placeholder="Enter the content here..."></textarea>
-    
-    <div class="control-group">
-        <select id="operationType">
-            <!-- 基础编码 -->
+</style>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+      </head>
+      <body>
+        <h1>JavaScript Encoding and decoding tools</h1>
+        <label for="inputBox">输入内容：</label>
+        <textarea id="inputBox" class="input-box" placeholder="在此输入内容..."></textarea>
+        <div class="control-group">
+          <select id="operationType">
             <option value="base64-encode">Base64 编码</option>
             <option value="base64-decode">Base64 解码</option>
-            <option value="base64-to-bytes">Base64 Decode into a byte array</option>
-            
-            <!-- Java Base64 相关 -->
+            <option value="base64-to-bytes">Base64 解码为字节数组</option>
             <option value="java-base64-encode">Java Base64 编码</option>
             <option value="java-base64-decode">Java Base64 解码</option>
             <option value="java-base64-to-bytes">Java Base64 解码为字节数组</option>
-            
-            <!-- URL编码 -->
             <option value="url-encode">URL 编码</option>
             <option value="url-decode">URL 解码</option>
-            
-            <!-- Hex编码 -->
             <option value="hex-encode">Hex 编码 (UTF8 → Hex)</option>
             <option value="hex-decode">Hex 解码 (Hex → UTF8)</option>
             <option value="hex-to-bytes">Hex 解码为字节数组</option>
-            
-            <!-- Java Hex 相关 -->
             <option value="java-hex-encode">Java Hex 编码 (UTF8 → Hex)</option>
             <option value="java-hex-decode">Java Hex 解码 (Hex → UTF8)</option>
             <option value="java-hex-to-bytes">Java Hex 解码为字节数组</option>
-            
             <option value="crypto-hex">CryptoJS Hex 哈希</option>
-            
-            <!-- 哈希算法 -->
             <option value="md5">MD5 哈希</option>
             <option value="sha1">SHA1 哈希</option>
             <option value="sha256">SHA256 哈希</option>
             <option value="java-md5">Java MD5 哈希</option>
             <option value="java-md5-16">Java MD5 16位哈希</option>
-            
-            <!-- ASCII编码 -->
             <option value="ascii-encode">ASCII 编码</option>
             <option value="ascii-decode">ASCII 解码</option>
-            
-            <!-- 其他 -->
             <option value="eval-decode">Eval 解码</option>
-        </select>
-        
-        <div class="button-group">
+          </select>
+          <div class="button-group">
             <button id="processBtn" onclick="process()">执行</button>
             <button id="clearBtn" onclick="clearFields()">清空</button>
             <button id="copyInputBtn" onclick="copyInput()">复制输入</button>
             <button id="copyOutputBtn" onclick="copyOutput()">复制结果</button>
+          </div>
         </div>
-    </div>
-    
-    <h2>Processing results:</h2>
-    <textarea id="outputBox" class="output-box" readonly></textarea>
-     <a href="./index.html" class="tool-link">Base64 and Image Converter</a>
-    <div class="footer">by 我是萝卜</div>
-    <script>
-        // 主处理函数
+        <h2>处理结果：</h2>
+        <textarea id="outputBox" class="output-box" readonly></textarea>
+        <a href="/index.html"tool-link">Go to Image Compressor Tool</a>
+        <div class="footer">by 我是萝卜</div>
+        <script>
         function process() {
             const input = document.getElementById('inputBox').value;
             const operationType = document.getElementById('operationType').value;
@@ -210,7 +197,6 @@ label {
 
             try {
                 switch(operationType) {
-                    // Base64 相关
                     case 'base64-encode':
                         output = utf8ToBase64(input);
                         break;
@@ -220,8 +206,6 @@ label {
                     case 'base64-to-bytes':
                         output = base64ToByteArray(input);
                         break;
-                    
-                    // Java Base64 相关
                     case 'java-base64-encode':
                         output = javaBase64Encode(input);
                         break;
@@ -231,16 +215,12 @@ label {
                     case 'java-base64-to-bytes':
                         output = javaBase64ToByteArray(input);
                         break;
-                    
-                    // URL 编码
                     case 'url-encode':
                         output = encodeURIComponent(input);
                         break;
                     case 'url-decode':
                         output = decodeURIComponent(input);
                         break;
-                    
-                    // Hex 相关
                     case 'hex-encode':
                         output = utf8ToHex(input);
                         break;
@@ -250,8 +230,6 @@ label {
                     case 'hex-to-bytes':
                         output = hexToByteArray(input);
                         break;
-                    
-                    // Java Hex 相关
                     case 'java-hex-encode':
                         output = javaHexEncode(input);
                         break;
@@ -261,12 +239,9 @@ label {
                     case 'java-hex-to-bytes':
                         output = javaHexToByteArray(input);
                         break;
-                    
                     case 'crypto-hex':
                         output = CryptoJS.SHA256(input).toString(CryptoJS.enc.Hex);
                         break;
-                    
-                    // 哈希算法
                     case 'md5':
                         output = CryptoJS.MD5(input).toString();
                         break;
@@ -282,20 +257,15 @@ label {
                     case 'java-md5-16':
                         output = javaMd5Encode16(input);
                         break;
-                    
-                    // ASCII 编码
                     case 'ascii-encode':
                         output = stringToAscii(input);
                         break;
                     case 'ascii-decode':
                         output = asciiToString(input);
                         break;
-                    
-                    // 其他
                     case 'eval-decode':
                         output = executeEval(input);
                         break;
-                    
                     default:
                         output = "请选择有效的操作类型";
                 }
@@ -308,9 +278,6 @@ label {
             }
         }
 
-        // ================ 工具函数 ================
-        
-        // Base64 相关
         function utf8ToBase64(str) {
             return btoa(unescape(encodeURIComponent(str)));
         }
@@ -328,22 +295,17 @@ label {
             return '[' + Array.from(bytes).join(', ') + ']';
         }
         
-        // Java Base64 相关
         function javaBase64Encode(str) {
-            // Java的Base64编码会包含换行符，每76个字符换行
             const base64 = utf8ToBase64(str);
-            // 模拟Java的Base64编码器行为，每76个字符插入换行符
             return base64.replace(/(.{76})/g, "$1\n").trim();
         }
         
         function javaBase64Decode(base64) {
-            // 移除所有换行符和空格
             const cleanBase64 = base64.replace(/\s+/g, '');
             return base64ToUtf8(cleanBase64);
         }
         
         function javaBase64ToByteArray(base64) {
-            // 移除所有换行符和空格
             const cleanBase64 = base64.replace(/\s+/g, '');
             const binaryString = atob(cleanBase64);
             const bytes = new Uint8Array(binaryString.length);
@@ -353,7 +315,6 @@ label {
             return '[' + Array.from(bytes).join(', ') + ']';
         }
         
-        // Hex 相关
         function utf8ToHex(str) {
             return Array.from(new TextEncoder().encode(str))
                 .map(b => b.toString(16).padStart(2, '0'))
@@ -370,44 +331,35 @@ label {
             return '[' + bytes.join(', ') + ']';
         }
         
-        // Java Hex 相关
         function javaHexEncode(str) {
-            // Java风格的Hex编码，大写字母，无分隔符
             return Array.from(new TextEncoder().encode(str))
                 .map(b => b.toString(16).padStart(2, '0').toUpperCase())
                 .join('');
         }
         
         function javaHexDecode(hex) {
-            // 移除所有非十六进制字符
             const cleanHex = hex.replace(/[^0-9a-fA-F]/g, '');
             
-            // 检查长度是否为偶数
             if (cleanHex.length % 2 !== 0) {
                 throw new Error("无效的十六进制字符串: 长度必须为偶数");
             }
             
-            // 将每两个字符转换为一个字节
             const bytes = [];
             for (let i = 0; i < cleanHex.length; i += 2) {
                 const byte = parseInt(cleanHex.substr(i, 2), 16);
                 bytes.push(byte);
             }
             
-            // 使用TextDecoder转换为UTF-8字符串
             return new TextDecoder('utf-8').decode(new Uint8Array(bytes));
         }
         
         function javaHexToByteArray(hex) {
-            // 移除所有非十六进制字符
             const cleanHex = hex.replace(/[^0-9a-fA-F]/g, '');
             
-            // 检查长度是否为偶数
             if (cleanHex.length % 2 !== 0) {
                 throw new Error("无效的十六进制字符串: 长度必须为偶数");
             }
             
-            // 将每两个字符转换为一个字节
             const bytes = [];
             for (let i = 0; i < cleanHex.length; i += 2) {
                 const byte = parseInt(cleanHex.substr(i, 2), 16);
@@ -417,19 +369,15 @@ label {
             return '[' + bytes.join(', ') + ']';
         }
         
-        // Java MD5 相关
         function javaMd5Encode(str) {
-            // Java风格的MD5编码，大写字母，无分隔符
             return CryptoJS.MD5(str).toString().toUpperCase();
         }
         
         function javaMd5Encode16(str) {
-            // Java风格的16位MD5编码，取中间16位，大写字母
             const fullMd5 = CryptoJS.MD5(str).toString().toUpperCase();
             return fullMd5.substring(8, 24);
         }
         
-        // ASCII 相关
         function stringToAscii(str) {
             return Array.from(str).map(c => c.charCodeAt(0)).join(' ');
         }
@@ -438,7 +386,6 @@ label {
             return ascii.split(' ').map(c => String.fromCharCode(parseInt(c))).join('');
         }
         
-        // Eval 解码
         function executeEval(code) {
             try {
                 code = code.replace(/^eval/, "");
@@ -448,7 +395,6 @@ label {
             }
         }
         
-        // ================ UI 功能 ================
         function clearFields() {
             document.getElementById('inputBox').value = '';
             document.getElementById('outputBox').value = '';
@@ -475,10 +421,9 @@ label {
             textarea.style.height = (textarea.scrollHeight) + 'px';
         }
         
-        // 初始化事件监听
-        document.getElementById('inputBox').addEventListener('input', function() {
+        document.getElementById('outputBox').addEventListener('input', function() {
             autoExpand(this);
         });
-    </script>
-</body>
-</html>
+        </script>
+      </body>
+    </html>
